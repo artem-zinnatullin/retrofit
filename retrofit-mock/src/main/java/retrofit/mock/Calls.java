@@ -44,6 +44,11 @@ public final class Calls {
       @Override public Call<T> clone() {
         return this;
       }
+
+      @Override
+      public String infoForException() {
+        return null;
+      }
     };
   }
 
@@ -63,6 +68,11 @@ public final class Calls {
       @SuppressWarnings("CloneDoesntCallSuperClone") // Immutable object.
       @Override public Call<T> clone() {
         return this;
+      }
+
+      @Override
+      public String infoForException() {
+        return null;
       }
     };
   }

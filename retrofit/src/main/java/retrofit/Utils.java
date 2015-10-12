@@ -28,10 +28,19 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
+import java.util.AbstractMap;
 import java.util.Arrays;
+import java.util.Map;
 import okio.Buffer;
 import okio.BufferedSource;
 import okio.Source;
+import retrofit.http.DELETE;
+import retrofit.http.GET;
+import retrofit.http.HEAD;
+import retrofit.http.HTTP;
+import retrofit.http.PATCH;
+import retrofit.http.POST;
+import retrofit.http.PUT;
 
 final class Utils {
   static <T> T checkNotNull(T object, String message) {
@@ -194,6 +203,37 @@ final class Utils {
               + "Specify the response body type only (e.g., Call<TweetResponse>).");
     }
     return responseType;
+  }
+
+  static Map.Entry<String, String> parseHttpMethodAndRelativePathTemplate(Annotation annotation) {
+    String httpMethod, path;
+
+    if (annotation instanceof DELETE) {
+      httpMethod = "DELETE";
+      path = ((DELETE) annotation).value();
+    } else if (annotation instanceof GET) {
+      httpMethod = "GET";
+      path = ((GET) annotation).value();
+    } else if (annotation instanceof HEAD) {
+      httpMethod = "HEAD";
+      path = ((HEAD) annotation).value();
+    } else if (annotation instanceof PATCH) {
+      httpMethod = "PATCH";
+      path = ((PATCH) annotation).value();
+    } else if (annotation instanceof POST) {
+      httpMethod = "POST";
+      path = ((POST) annotation).value();
+    } else if (annotation instanceof PUT) {
+      httpMethod = "PUT";
+      path = ((PUT) annotation).value();
+    } else if (annotation instanceof HTTP) {
+      httpMethod = ((HTTP) annotation).method();
+      path = ((HTTP) annotation).path();
+    } else {
+      return null;
+    }
+
+    return new AbstractMap.SimpleImmutableEntry<>(httpMethod, path);
   }
 
   private Utils() {

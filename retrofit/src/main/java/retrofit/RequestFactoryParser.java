@@ -26,11 +26,9 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import retrofit.http.Body;
-import retrofit.http.DELETE;
 import retrofit.http.Field;
 import retrofit.http.FieldMap;
 import retrofit.http.FormUrlEncoded;
-import retrofit.http.GET;
 import retrofit.http.HEAD;
 import retrofit.http.HTTP;
 import retrofit.http.Header;
@@ -94,25 +92,27 @@ final class RequestFactoryParser {
 
   private void parseMethodAnnotations(Type responseType) {
     for (Annotation annotation : method.getAnnotations()) {
-      if (annotation instanceof DELETE) {
-        parseHttpMethodAndPath("DELETE", ((DELETE) annotation).value(), false);
-      } else if (annotation instanceof GET) {
-        parseHttpMethodAndPath("GET", ((GET) annotation).value(), false);
-      } else if (annotation instanceof HEAD) {
-        parseHttpMethodAndPath("HEAD", ((HEAD) annotation).value(), false);
-        if (!Void.class.equals(responseType)) {
+      Map.Entry<String, String> httpMethodAndRelativePathTemplate
+          = Utils.parseHttpMethodAndRelativePathTemplate(annotation);
+
+      if (httpMethodAndRelativePathTemplate != null) {
+        if (annotation instanceof HEAD && !Void.class.equals(responseType)) {
           throw methodError(method, "HEAD method must use Void as response type.");
         }
-      } else if (annotation instanceof PATCH) {
-        parseHttpMethodAndPath("PATCH", ((PATCH) annotation).value(), true);
-      } else if (annotation instanceof POST) {
-        parseHttpMethodAndPath("POST", ((POST) annotation).value(), true);
-      } else if (annotation instanceof PUT) {
-        parseHttpMethodAndPath("PUT", ((PUT) annotation).value(), true);
-      } else if (annotation instanceof HTTP) {
-        HTTP http = (HTTP) annotation;
-        parseHttpMethodAndPath(http.method(), http.path(), http.hasBody());
-      } else if (annotation instanceof Headers) {
+
+        boolean hasBody = annotation instanceof PATCH
+            || annotation instanceof POST
+            || annotation instanceof PUT
+            || (annotation instanceof HTTP && ((HTTP) annotation).hasBody());
+
+        parseHttpMethodAndPath(
+            httpMethodAndRelativePathTemplate.getKey(),
+            httpMethodAndRelativePathTemplate.getValue(),
+            hasBody
+        );
+      }
+
+      if (annotation instanceof Headers) {
         String[] headersToParse = ((Headers) annotation).value();
         if (headersToParse.length == 0) {
           throw methodError(method, "@Headers annotation is empty.");

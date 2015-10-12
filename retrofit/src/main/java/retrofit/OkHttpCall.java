@@ -31,27 +31,34 @@ final class OkHttpCall<T> implements Call<T> {
   private final RequestFactory requestFactory;
   private final Converter<ResponseBody, T> responseConverter;
   private final Object[] args;
+  private final String infoForException;
 
   private volatile com.squareup.okhttp.Call rawCall;
   private boolean executed; // Guarded by this.
   private volatile boolean canceled;
 
   OkHttpCall(Retrofit retrofit, RequestFactory requestFactory,
-      Converter<ResponseBody, T> responseConverter, Object[] args) {
+      Converter<ResponseBody, T> responseConverter, Object[] args, String infoForException) {
     this.retrofit = retrofit;
     this.requestFactory = requestFactory;
     this.responseConverter = responseConverter;
     this.args = args;
+    this.infoForException = infoForException;
+  }
+
+  @Override
+  public String infoForException() {
+    return infoForException;
   }
 
   @SuppressWarnings("CloneDoesntCallSuperClone") // We are a final type & this saves clearing state.
   @Override public OkHttpCall<T> clone() {
-    return new OkHttpCall<>(retrofit, requestFactory, responseConverter, args);
+    return new OkHttpCall<>(retrofit, requestFactory, responseConverter, args, infoForException);
   }
 
   @Override public void enqueue(final Callback<T> callback) {
     synchronized (this) {
-      if (executed) throw new IllegalStateException("Already executed");
+      if (executed) throw new IllegalStateException("Already executed, " + infoForException);
       executed = true;
     }
 
@@ -59,7 +66,7 @@ final class OkHttpCall<T> implements Call<T> {
     try {
       rawCall = createRawCall();
     } catch (Throwable t) {
-      callback.onFailure(t);
+      callback.onFailure(new RuntimeException("Can not create call for " + infoForException, t));
       return;
     }
     if (canceled) {
@@ -103,7 +110,7 @@ final class OkHttpCall<T> implements Call<T> {
 
   public Response<T> execute() throws IOException {
     synchronized (this) {
-      if (executed) throw new IllegalStateException("Already executed");
+      if (executed) throw new IllegalStateException("Already executed, " + infoForException);
       executed = true;
     }
 
@@ -151,7 +158,8 @@ final class OkHttpCall<T> implements Call<T> {
       // If the underlying source threw an exception, propagate that rather than indicating it was
       // a runtime exception.
       catchingBody.throwIfCaught();
-      throw e;
+      throw new RuntimeException("Problem has occurred during conversion of response for "
+          + infoForException, e);
     }
   }
 

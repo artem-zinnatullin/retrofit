@@ -162,5 +162,10 @@ public final class ExecutorCallAdapterFactoryTest {
     @Override public Call<String> clone() {
       throw new UnsupportedOperationException();
     }
+
+    @Override
+    public String infoForException() {
+      return null;
+    }
   }
 }
