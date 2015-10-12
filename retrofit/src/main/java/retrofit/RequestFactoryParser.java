@@ -95,7 +95,6 @@ final class RequestFactoryParser {
       Map.Entry<String, String> httpMethodAndRelativePathTemplate
           = Utils.parseHttpMethodAndRelativePathTemplate(annotation);
 
-      if (httpMethodAndRelativePathTemplate != null) {
         if (annotation instanceof HEAD && !Void.class.equals(responseType)) {
           throw methodError(method, "HEAD method must use Void as response type.");
         }
@@ -110,7 +109,7 @@ final class RequestFactoryParser {
             httpMethodAndRelativePathTemplate.getValue(),
             hasBody
         );
-      }
+      
 
       if (annotation instanceof Headers) {
         String[] headersToParse = ((Headers) annotation).value();
