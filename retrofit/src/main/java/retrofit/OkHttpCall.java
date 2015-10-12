@@ -66,7 +66,7 @@ final class OkHttpCall<T> implements Call<T> {
     try {
       rawCall = createRawCall();
     } catch (Throwable t) {
-      callback.onFailure(new RuntimeException("Can not create call for " + infoForException, t));
+      callback.onFailure(new RuntimeException("Cannot create call for " + infoForException, t));
       return;
     }
     if (canceled) {

@@ -247,7 +247,7 @@ public final class CallTest {
 
     Throwable failure = failureRef.get();
 
-    assertThat(failure).hasMessage("Can not create call for Service.postString(), HTTP method = POST, relative path template = /");
+    assertThat(failure).hasMessage("Cannot create call for Service.postString(), HTTP method = POST, relative path template = /");
     assertThat(failure).hasCauseExactlyInstanceOf(UnsupportedOperationException.class);
     assertThat(failure.getCause()).hasMessage("I am broken!");
   }

@@ -21,6 +21,8 @@ import com.squareup.okhttp.ResponseBody;
 import java.io.Closeable;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.lang.annotation.AnnotationFormatError;
+import java.lang.annotation.IncompleteAnnotationException;
 import java.lang.reflect.Array;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
@@ -31,6 +33,8 @@ import java.lang.reflect.WildcardType;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Map;
+
+import com.sun.xml.internal.txw2.IllegalAnnotationException;
 import okio.Buffer;
 import okio.BufferedSource;
 import okio.Source;
@@ -230,7 +234,7 @@ final class Utils {
       httpMethod = ((HTTP) annotation).method();
       path = ((HTTP) annotation).path();
     } else {
-      return null;
+      throw new IllegalAnnotationException("HttpMethod annotation is missing, HttpMethod calls need to be specified");
     }
 
     return new AbstractMap.SimpleImmutableEntry<>(httpMethod, path);
