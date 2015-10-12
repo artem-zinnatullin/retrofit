@@ -109,7 +109,7 @@ final class RequestFactoryParser {
             httpMethodAndRelativePathTemplate.getValue(),
             hasBody
         );
-      
+
 
       if (annotation instanceof Headers) {
         String[] headersToParse = ((Headers) annotation).value();
