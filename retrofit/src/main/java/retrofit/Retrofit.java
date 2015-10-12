@@ -61,7 +61,7 @@ import static retrofit.Utils.checkNotNull;
  * <ul>
  * <li>{@link retrofit.http.FormUrlEncoded @FormUrlEncoded} - Form-encoded data with key-value
  * pairs specified by the {@link retrofit.http.Field @Field} parameter annotation.
- * <li>{@link retrofit.http.Multipart @Multipart} - RFC 2387-compliant multi-part data with parts
+ * <li>{@link retrofit.http.Multipart @Multipart} - RFC 2388-compliant multi-part data with parts
  * specified by the {@link retrofit.http.Part @Part} parameter annotation.
  * </ul>
  * <p>
@@ -287,7 +287,7 @@ public final class Retrofit {
     public Builder() {
       // Add the built-in converter factory first. This prevents overriding its behavior but also
       // ensures correct behavior when using converters that consume all types.
-      converterFactories.add(new BuiltInConverterFactory());
+      converterFactories.add(new BuiltInConverters());
     }
 
     /** The HTTP client used for requests. */

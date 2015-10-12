@@ -19,6 +19,7 @@ import com.squareup.okhttp.ResponseBody;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.Map;
 
 final class MethodHandler<T> {
   @SuppressWarnings("unchecked")
@@ -27,8 +28,10 @@ final class MethodHandler<T> {
     Type responseType = callAdapter.responseType();
     Converter<ResponseBody, Object> responseConverter =
         (Converter<ResponseBody, Object>) createResponseConverter(method, retrofit, responseType);
-    RequestFactory requestFactory = RequestFactoryParser.parse(method, retrofit);
-    return new MethodHandler<>(retrofit, requestFactory, callAdapter, responseConverter);
+    RequestFactory requestFactory = RequestFactoryParser.parse(method, responseType, retrofit);
+    String infoForException = collectInfoForException(method);
+    return new MethodHandler<>(retrofit, requestFactory, callAdapter, responseConverter,
+        infoForException);
   }
 
   private static CallAdapter<?> createCallAdapter(Method method, Retrofit retrofit) {
@@ -58,20 +61,55 @@ final class MethodHandler<T> {
     }
   }
 
+  private static String collectInfoForException(Method method) {
+    Annotation[] annotations = method.getAnnotations();
+
+    String httpMethod = null;
+    String relativePathTemplate = null;
+
+    for (Annotation annotation : annotations) {
+      Map.Entry<String, String> httpMethodAndPathTemplate
+          = Utils.parseHttpMethodAndRelativePathTemplate(annotation);
+
+      if (httpMethodAndPathTemplate != null) {
+        httpMethod = httpMethodAndPathTemplate.getKey();
+        relativePathTemplate = httpMethodAndPathTemplate.getValue();
+        break;
+      }
+    }
+
+    return method.getDeclaringClass().getSimpleName()
+        + "."
+        + method.getName()
+        + "()"
+        + ", HTTP method = "
+        + httpMethod
+        + ", relative path template = "
+        + relativePathTemplate;
+  }
+
+
+
   private final Retrofit retrofit;
   private final RequestFactory requestFactory;
   private final CallAdapter<T> callAdapter;
   private final Converter<ResponseBody, T> responseConverter;
 
+  // Should never include sensitive data such as query params, headers and so on.
+  private final String infoForException;
+
   private MethodHandler(Retrofit retrofit, RequestFactory requestFactory,
-      CallAdapter<T> callAdapter, Converter<ResponseBody, T> responseConverter) {
+      CallAdapter<T> callAdapter, Converter<ResponseBody, T> responseConverter,
+      String infoForException) {
     this.retrofit = retrofit;
     this.requestFactory = requestFactory;
     this.callAdapter = callAdapter;
     this.responseConverter = responseConverter;
+    this.infoForException = infoForException;
   }
 
   Object invoke(Object... args) {
-    return callAdapter.adapt(new OkHttpCall<>(retrofit, requestFactory, responseConverter, args));
+    return callAdapter.adapt(new OkHttpCall<>(retrofit, requestFactory, responseConverter, args,
+        infoForException));
   }
 }

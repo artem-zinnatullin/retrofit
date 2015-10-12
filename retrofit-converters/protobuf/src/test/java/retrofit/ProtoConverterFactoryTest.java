@@ -89,7 +89,7 @@ public final class ProtoConverterFactoryTest {
           + "    for method Service.wrongClass");
       assertThat(e.getCause()).hasMessage(
           "Could not locate ResponseBody converter for class java.lang.String. Tried:\n"
-              + " * retrofit.BuiltInConverterFactory\n"
+              + " * retrofit.BuiltInConverters\n"
               + " * retrofit.ProtoConverterFactory");
     }
   }
@@ -106,7 +106,7 @@ public final class ProtoConverterFactoryTest {
           + "    for method Service.wrongType");
       assertThat(e.getCause()).hasMessage(
           "Could not locate ResponseBody converter for java.util.List<java.lang.String>. Tried:\n"
-              + " * retrofit.BuiltInConverterFactory\n"
+              + " * retrofit.BuiltInConverters\n"
               + " * retrofit.ProtoConverterFactory");
     }
   }
@@ -120,7 +120,9 @@ public final class ProtoConverterFactoryTest {
       call.execute();
       fail();
     } catch (RuntimeException e) {
-      assertThat(e.getCause()).isInstanceOf(InvalidProtocolBufferException.class)
+      assertThat(e).isExactlyInstanceOf(RuntimeException.class)
+          .hasMessage("Problem has occurred during conversion of response for Service.get(), HTTP method = GET, relative path template = /");
+      assertThat(e.getCause().getCause()).isInstanceOf(InvalidProtocolBufferException.class)
           .hasMessageContaining("input ended unexpectedly");
     }
   }

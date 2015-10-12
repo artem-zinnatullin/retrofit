@@ -20,6 +20,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import rx.Observable;
 import rx.Subscriber;
+import rx.exceptions.Exceptions;
 import rx.functions.Action0;
 import rx.functions.Func1;
 import rx.subscriptions.Subscriptions;
@@ -102,31 +103,22 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
         }
       }));
 
-      call.enqueue(new Callback<T>() {
-        @Override public void onResponse(Response<T> response, Retrofit retrofit) {
-          if (subscriber.isUnsubscribed()) {
-            return;
-          }
-          try {
-            subscriber.onNext(response);
-          } catch (Throwable t) {
-            if (!subscriber.isUnsubscribed()) {
-              subscriber.onError(t);
-            }
-            return;
-          }
-          if (!subscriber.isUnsubscribed()) {
-            subscriber.onCompleted();
-          }
+      try {
+        Response<T> response = call.execute();
+        if (!subscriber.isUnsubscribed()) {
+          subscriber.onNext(response);
         }
-
-        @Override public void onFailure(Throwable t) {
-          if (subscriber.isUnsubscribed()) {
-            return;
-          }
+      } catch (Throwable t) {
+        Exceptions.throwIfFatal(t);
+        if (!subscriber.isUnsubscribed()) {
           subscriber.onError(t);
         }
-      });
+        return;
+      }
+
+      if (!subscriber.isUnsubscribed()) {
+        subscriber.onCompleted();
+      }
     }
   }
 
@@ -157,14 +149,14 @@ public final class RxJavaCallAdapterFactory implements CallAdapter.Factory {
       return responseType;
     }
 
-    @Override public <R> Observable<R> adapt(Call<R> call) {
+    @Override public <R> Observable<R> adapt(final Call<R> call) {
       return Observable.create(new CallOnSubscribe<>(call)) //
           .flatMap(new Func1<Response<R>, Observable<R>>() {
             @Override public Observable<R> call(Response<R> response) {
               if (response.isSuccess()) {
                 return Observable.just(response.body());
               }
-              return Observable.error(new HttpException(response));
+              return Observable.error(new HttpException(response, call.infoForException()));
             }
           });
     }

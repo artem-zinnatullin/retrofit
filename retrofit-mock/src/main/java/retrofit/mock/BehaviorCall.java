@@ -63,6 +63,11 @@ final class BehaviorCall<T> implements Call<T> {
     return new BehaviorCall<>(retrofit, behavior, backgroundExecutor, delegate.clone());
   }
 
+  @Override
+  public String infoForException() {
+    return delegate.infoForException();
+  }
+
   @Override public void enqueue(final Callback<T> callback) {
     synchronized (this) {
       if (executed) throw new IllegalStateException("Already executed");
