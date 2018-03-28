@@ -55,15 +55,15 @@ final class RxJava2CallAdapter<R> implements CallAdapter<R, Object> {
   }
 
   @Override public Object adapt(Call<R> call) {
-    Observable<Response<R>> responseObservable = isAsync
+    Observable<Response<R>> responseObservable = RxJavaPlugins.onAssembly(isAsync
         ? new CallEnqueueObservable<>(call)
-        : new CallExecuteObservable<>(call);
+        : new CallExecuteObservable<>(call));
 
     Observable<?> observable;
     if (isResult) {
-      observable = new ResultObservable<>(responseObservable);
+      observable = RxJavaPlugins.onAssembly(new ResultObservable<>(responseObservable));
     } else if (isBody) {
-      observable = new BodyObservable<>(responseObservable);
+      observable = RxJavaPlugins.onAssembly(new BodyObservable<>(responseObservable));
     } else {
       observable = responseObservable;
     }
@@ -84,6 +84,6 @@ final class RxJava2CallAdapter<R> implements CallAdapter<R, Object> {
     if (isCompletable) {
       return observable.ignoreElements();
     }
-    return RxJavaPlugins.onAssembly(observable);
+    return observable;
   }
 }
